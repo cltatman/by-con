@@ -1,0 +1,58 @@
+<html>
+<head>
+<script src="https://unpkg.com/ohm-js@latest/dist/ohm.min.js"></script>
+</head>
+<body>
+<textarea style="position:absolute;" id="steps"></textarea>
+<canvas id="canvas"></canvas>
+<script src="geo.js"></script>
+<script>
+
+const steps_el = document.getElementById("steps")
+const render_scale = window.devicePixelRatio
+const canvas = document.getElementById("canvas")
+const ctx = canvas.getContext("2d")
+canvas.style.width = window.innerWidth
+canvas.style.height = window.innerHeight
+var rect = canvas.getBoundingClientRect()
+canvas.width = Math.floor(rect.width * render_scale)
+canvas.height = Math.floor(rect.height * render_scale)
+ctx.scale(render_scale, render_scale)
+
+
+const lerp = (a, b, t) => b * t + (1 - t) * a
+const draw = (t) => {
+  requestAnimationFrame(draw)
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  const figures = construct(steps_el.value, { t: t / 3000 % 1, }, {
+    guide: {
+      along: (t) => (l) => ({ x: lerp(l.from.x, l.to.x, t), y: lerp(l.from.y, l.to.y, t) })
+    }
+  })
+
+  const lines = figures.filter((f) => f.type === "guide")
+  const points = figures.filter((f) => f.type === "anchor")
+
+  lines.forEach((d) => {
+    const line = d.v
+    ctx.beginPath()
+    ctx.moveTo(line.from.x, line.from.y)
+    ctx.lineTo(line.to.x, line.to.y)
+    ctx.stroke()
+  })
+
+  points.forEach((d) => {
+    const point = d.v
+    ctx.beginPath()
+    ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI)
+    ctx.fill()
+  })
+}
+
+requestAnimationFrame(draw)
+
+</script>
+</body>
+</html>
